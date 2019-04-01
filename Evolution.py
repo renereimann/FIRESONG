@@ -5,19 +5,16 @@ import scipy
 import cosmolopy
 cosmology = {'omega_M_0': 0.308, 'omega_lambda_0': 0.692, 'h': 0.678}
 
+implemented_evolutions = {}
+
+def get_available_evolutions():
+    return implemented_evolutions.keys()
 
 def get_evolution(evol):
-    evolutions = {"NoEvolution": NoEvolution,
-                  "HB2006SFR": HopkinsBeacom2006StarFormationRate,
-                  "YMKBH2008SFR": YukselEtAl2008StarFormationRate,
-                  "CC2015SNR": CandelsClash2015SNRate,
-                  "MD2014SFR": MadauDickinson2014CSFH
-                  }
-    if not evol in evolutions.keys():
+    if not evol in implemented_evolutions .keys():
         raise NotImplementedError("Source evolution " +
                                   evol + " not implemented.")
-
-    return evolutions[evol]()
+    return implemented_evolutions [evol]()
 
 
 class Evolution(object):
@@ -28,13 +25,14 @@ class Evolution(object):
         raise NotImplementedError("Abstract")
 
     def __call__(self, z):
-        return self.parametrization(np.log10(1.+z))
+        return np.vectorize(lambda z2: self.parametrization(np.log10(1.+z2)))(z)
 
 
 class NoEvolution(Evolution):
     def parametrization(self, x):
         return 1.
 
+implemented_evolutions["NoEvolution"] = NoEvolution
 
 class HopkinsBeacom2006StarFormationRate(Evolution):
     """ StarFormationHistory (SFR), from Hopkins and Beacom 2006,
@@ -53,6 +51,7 @@ class HopkinsBeacom2006StarFormationRate(Evolution):
             return np.asscalar(result)
         return result
 
+implemented_evolutions["HB2006SFR"] = HopkinsBeacom2006StarFormationRate
 
 class YukselEtAl2008StarFormationRate(Evolution):
     """ Star Formation Rate in units of M_sun/yr/Mpc^3
@@ -77,6 +76,7 @@ class YukselEtAl2008StarFormationRate(Evolution):
         return r0 * (x**(a*eta) + (x/B)**(b*eta) +
                      (x/C)**(c*eta))**(1./eta)
 
+implemented_evolutions["YMKBH2008SFR"] = YukselEtAl2008StarFormationRate
 
 class CandelsClash2015SNRate(Evolution):
     def parametrization(self, x):
@@ -87,6 +87,7 @@ class CandelsClash2015SNRate(Evolution):
         density = a*(10.**x)**c / ((10.**x / b)**d+1.)
         return density
 
+implemented_evolutions["CC2015SNR"] = CandelsClash2015SNRate
 
 class MadauDickinson2014CSFH(Evolution):
     def parametrization(self, x):
@@ -97,6 +98,7 @@ class MadauDickinson2014CSFH(Evolution):
         density = a*((1+x)**b) / (1 + ((1+x)/c)**d)
         return density
 
+implemented_evolutions["MD2014SFR"] = MadauDickinson2014CSFH
 
 class SourcePopulation(object):
     def __init__(self, cosmology, evolution):
