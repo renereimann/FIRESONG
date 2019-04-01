@@ -72,7 +72,7 @@ def flux_pdf(outputdir,
     logFlux_array = np.linspace(logFMin, logFMax, nFluxBins)
     deltaLogFlux = float(logFMax-logFMin) / nFluxBins
 
-    Count_array = np.zeros(nFluxBins)
+    Count_array = np.zeros(int(nFluxBins))
     fluxOutOfBounds = []
     if with_dFdz:
         Flux_from_fixed_z = np.zeros(bins)
@@ -175,7 +175,7 @@ if __name__ == "__main__":
                         dest="fRange", type=float, default=[-10, 6],
                         help="Set the minimal and maximal log10(flux) range , unit log10(GeV/cm^2.s.sr)")
     parser.add_argument("--fBins", action="store",
-                        dest="fBins", type=float, default=120,
+                        dest="fBins", type=int, default=120,
                         help="Set number of log10(flux) bins used in evaluation")
     parser.add_argument("--dFdz", action="store_true",
                         help="If ggiven a second file is created with dF/dz.")
